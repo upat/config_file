@@ -14,6 +14,6 @@ for file in `\find /R/ -type f -name *.c`; do
 	txtfile=$path/$fname.log.txt
 
 	echo $file
-	$gcc $file -o $output
+	$gcc $path/*.c -o $output
 	$output > $txtfile
 done
