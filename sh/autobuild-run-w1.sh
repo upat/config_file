@@ -3,7 +3,7 @@ gcc='gcc -W -Wall'
 exe='_test.exe'
 exelog='_test.log.txt'
 
-# 第6週レポート用 for MSYS2
+# 第9週レポート用 for MSYS2
 # 処理を行うファイル名の指定(無指定の場合は*.c)
 echo -n "select file name: "
 read inputf
@@ -11,6 +11,10 @@ if [ -z "$inputf" ]; then
   inputf="*.c"
 fi
 echo input str is 『 $inputf 』
+
+echo -n "input argument: "
+read exe_arg
+echo exe arg is 『 $exe_arg 』
 
 # Rドライブのディレクトリ下にある.cファイル(フルパスで出力)の検索
 for file in `\find /R/ -type f -name $inputf`; do
@@ -32,7 +36,7 @@ for file in `\find /R/ -type f -name $inputf`; do
     echo -en "\e[m"
     # 実行ファイルの生成に失敗した場合空のtxtを出力
     if [ -e $output ]; then
-	    $output > $txtfile
+	    $output $exe_arg > $txtfile
     else
       echo -e "\e[35mexe file create failed.\e[m"
       touch $txtfile
