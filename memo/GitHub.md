@@ -77,6 +77,13 @@ git push -u origin master # -uを付けると、以後 "git push" を "git push 
 
 - 直前のコミットを取り消す場合(複数人で作業の場合は非推奨)
 1. `git reset --soft HEAD^` (実ファイルの変更も行う場合は `--soft` を `--hard` に)
+    - `git reset` のオプション
+        - `--soft` commitのみ
+        - `--mixed` commitとadd
+        - `--hard` commitとaddとワークツリー
+    - `HEAD` について
+        - `HEAD^` または `HEAD~` 直前のコミット
+        - `HEAD` 最新のコミット
 1. `git add [ファイル名など]`
 1. `git commit -m "コメント`
 1. `git push -f origin master`
