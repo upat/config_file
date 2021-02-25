@@ -18,6 +18,7 @@
 - [HDDを完全停止させる手順](#HDDを完全停止させる手順)
 - [TinkerBoard設定](#TinkerBoard設定)
 - [chromedriverの導入](#chromedriverの導入)
+- [TeraTermリモート設定](#TeraTermリモート設定)
 
 ### 基本操作
 ---
@@ -243,3 +244,10 @@
     - (上記URLのバージョンで対応できない場合はchromedriver armhf等のワードで検索)
 - `sudo dpkg -i [*.debのURL]` で導入(`-i` でインストール、`-r` で設定ファイルを残してアンインストール、`-P` で全てアンインストール)
 
+### TeraTermリモート設定
+---
+- `sudo raspi-config` を実行
+- Advanced Options を選択
+- SSH を選択
+- Enable を選択
+- ※TinkerBoardは初期設定の状態で接続可能らしい(ユーザー名：linaro,パス：linaro)
