@@ -17,6 +17,7 @@
 - [USB電源管理](#USB電源管理)
 - [HDDを完全停止させる手順](#HDDを完全停止させる手順)
 - [TinkerBoard設定](#TinkerBoard設定)
+- [chromedriverの導入](#chromedriverの導入)
 
 ### 基本操作
 ---
@@ -70,6 +71,10 @@
 - 設定
     - `sudo apt-get install ntfs-3g` でパッケージを入れる
     - `sudo vim /etc/fstab` を開く
+    - 上記の末尾へ下記を挿入
+    ```
+    UUID="[上記で調べたUUID]"    [マウントしたデバイスのパス]    ntfs-3g    default,nofail    0,0
+    ```
 
 ### GUIとCUIの切替
 ---
@@ -231,3 +236,10 @@
     sudo dpkg -i chromium_67.0.3396.87-1~deb9u1_armhf.deb
     sudo apt-mark hold chromium
     ```
+### chromedriverの導入
+---
+- chromium -v でバージョンを確認。下記URLより同じバージョンのchromedriverを探す
+    - https://launchpad.net/ubuntu/xenial/armhf/chromium-chromedriver
+    - (上記URLのバージョンで対応できない場合はchromedriver armhf等のワードで検索)
+- `sudo dpkg -i [*.debのURL]` で導入(`-i` でインストール、`-r` で設定ファイルを残してアンインストール、`-P` で全てアンインストール)
+
