@@ -1,4 +1,4 @@
-# シングルボードPC個人的メモ
+# シングルボードPC個人的メモ(update:2021.02.25)
 
 ## 目次
 - [基本操作](#基本操作)
@@ -19,6 +19,7 @@
 - [TinkerBoard設定](#TinkerBoard設定)
 - [chromedriverの導入](#chromedriverの導入)
 - [TeraTermリモート設定](#TeraTermリモート設定)
+- [Raspberry PiのステルスSSID対応](#Raspberry-PiのステルスSSID対応)
 
 ### 基本操作
 ---
@@ -33,18 +34,31 @@
 - HDMI出力の停止(動くか謎)
     - `tvservice --off`
         - 出力再開は `tvservice -p`
+- とりあえずアプデ(`-y` は全て自動でyes入力)
+    - `sudo apt update`
+        - パッケージリストの更新
+    - `sudo apt full-upgrade -y`
+        - インストール済みのパッケージを全てアップグレード
+    - `sudo apt autoremove -y`
+    - `sudo apt clean`
+        - 不要なパッケージの削除
+    - `sudo reboot`
+        - 再起動
 
 ### pip
 ---
-- pipのインストール
-    - `sudo apt-get install python3-dev python3-pip`
+- pipのインストール(ラズパイは初期インストール済み)
+    - `sudo apt install python3-dev python3-pip`
 - pipのアプグレ
-    - `sudo pip install --upgrade pip`
+    - `python3 -m pip install --upgrade pip`
+- アップデート有無確認
+    - `python3 -m pip list --o`
 
 ### samba
 ---
 - インストール
-    - `sudo apt-get install samba`
+    - `sudo apt install samba`
+    - 上記インストール中にWINS設定を使うか尋ねられるが「いいえ」でOK
 - 設定ファイル編集
     - `sudo vi /etc/samba/smb.conf`
 - 設定例
@@ -54,7 +68,7 @@
         path = /home/pi
         guest ok = yes
         read only = no
-        browsable = yes
+        browseable = yes
         force user = pi
     ```
 - 起動
@@ -62,6 +76,11 @@
     - `sudo service nmbd restart`
 - 停止
     - `sudo service samba stop`
+- 自動で起動しないとき
+    ```
+    sudo systemctl enable smbd
+    sudo systemctl enable nmbd
+    ```
 
 ### NTFSなディスクを使用する時
 ---
@@ -70,7 +89,7 @@
     - `sudo blkid [マウント位置]` でUUIDを調べる
     - `sudo parted -l` でも可
 - 設定
-    - `sudo apt-get install ntfs-3g` でパッケージを入れる
+    - `sudo apt install ntfs-3g` でパッケージを入れる
     - `sudo vim /etc/fstab` を開く
     - 上記の末尾へ下記を挿入
     ```
@@ -82,7 +101,8 @@
 - 一時的
     - `startx`
 - 起動時から
-    - `sudo raspi-configの後、該当箇所を変更`
+    - `sudo raspi-config` 実行
+    - `System Options` → `Boot / Auto Login` → `Console Autologin` または `Desktop Autologin`
 
 ### SSH通信切断後もバッググラウンド実行の維持
 ---
@@ -100,7 +120,7 @@
 ### Bluetooth導入
 ---
 - インストール
-    - `sudo apt-get install bluez pulseaudio-module-bluetooth python-gobject python-gobject-2`
+    - `sudo apt install bluez pulseaudio-module-bluetooth python-gobject python-gobject-2`
 - 設定など
     - `sudo bluetoothctl` 後に `show` を入力し、 `UUID: Audio Sink` の項目があるか確認
         - powered yes
@@ -130,7 +150,7 @@
 ### Nginxの導入
 ---
 - インストール
-    - `sudo apt-get install nginx`
+    - `sudo apt install nginx`
     - `curl http://uwsgi.it/install | bash -s cgi /home/pi/uwsgi`
 - サーバー設定
     - `/etc/nginx/sites-enabled/default`
@@ -177,7 +197,7 @@
 ### Apacheの設定
 ---
 - インストール
-    - `sudo apt-get install apache2`
+    - `sudo apt install apache2`
 - 設定ファイル
     - `/etc/apache2/mods-available/mime.conf`
     - `/etc/apache2/conf-available/serve-cgi-bin.conf`
@@ -186,7 +206,7 @@
 ---
 - hub-ctrlコマンド(使う前にlsusbで調べる)
     - インストール
-        - `sudo apt-get install libusb-dev`
+        - `sudo apt install libusb-dev`
         - 任意のディレクトリで下記コマンド実行
         ```
         wget http://www.gniibe.org/oitoite/ac-power-control-by-USB-hub/hub-ctrl.c
@@ -210,7 +230,7 @@
 - CH340ドライバ導入
     - おそらく `sudo modprobe ch341` 実行して再起動でいいはず…
     - その他わるあがき
-        - `sudo apt-get install git-core device-tree-compiler`
+        - `sudo apt install git-core device-tree-compiler`
         - `git clone https://github.com/TinkerBoard/debian_kernel.git`
         - `ln -s ~/debian_kernel /usr/src/linux-headers-$(uname -r)`
 
@@ -225,7 +245,7 @@
     - 下記コマンドを実行
     ```
     sudo curl -sL https://deb.nodesource.com/setup_9.x | sudo bash -
-    sudo apt-get install nodejs
+    sudo apt install nodejs
     ```
 
     - pageresのインストール(動かなかった)
@@ -239,15 +259,26 @@
     ```
 ### chromedriverの導入
 ---
-- chromium -v でバージョンを確認。下記URLより同じバージョンのchromedriverを探す
-    - https://launchpad.net/ubuntu/xenial/armhf/chromium-chromedriver
-    - (上記URLのバージョンで対応できない場合はchromedriver armhf等のワードで検索)
-- `sudo dpkg -i [*.debのURL]` で導入(`-i` でインストール、`-r` で設定ファイルを残してアンインストール、`-P` で全てアンインストール)
+- パッケージに含まれているため、`sudo apt install chromium chromium-driver` でOK
 
 ### TeraTermリモート設定
 ---
 - `sudo raspi-config` を実行
-- Advanced Options を選択
+- Interface Options を選択
 - SSH を選択
 - Enable を選択
 - ※TinkerBoardは初期設定の状態で接続可能らしい(ユーザー名：linaro,パス：linaro)
+
+### Raspberry PiのステルスSSID対応
+---
+- ※非ステルスSSIDで設定済みの前提
+- `sudo vi /etc/wpa_supplicant/wpa_supplicant.conf` を開く
+- 下記記述を探す
+    ```
+    network={
+            ssid=[任意のSSID]
+            psk=[任意のパスワード]
+            key_mgmt=WPA-PSK
+    }
+    ```
+- 上記に `scan_ssid=1` を追加
