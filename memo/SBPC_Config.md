@@ -1,4 +1,4 @@
-# シングルボードPC個人的メモ(update:2021.02.25)
+# シングルボードPC個人的メモ(update:2025.06.17)
 
 ## 目次
 - [基本操作](#基本操作)
@@ -8,18 +8,19 @@
 - [GUIとCUIの切替](#GUIとCUIの切替)
 - [SSH通信切断後もバッググラウンド実行の維持](#SSH通信切断後もバッググラウンド実行の維持)
 - [HDDのSMART値出力](#HDDのSMART値出力)
-- [Bluetooth導入](#Bluetooth導入)
-- [音声出力ハードの確認](#音声出力ハードの確認)
-- [Nginxの導入](#Nginxの導入)
+- [(未使用)Bluetooth導入](#Bluetooth導入)
+- [(未使用)音声出力ハードの確認](#音声出力ハードの確認)
+- [(未使用)Nginxの導入](#Nginxの導入)
 - [NTPの設定](#NTPの設定)
 - [crontabの設定](#crontabの設定)
-- [Apacheの設定](#Apacheの設定)
+- [(未使用)Apacheの設定](#Apacheの設定)
 - [USB電源管理](#USB電源管理)
 - [HDDを完全停止させる手順](#HDDを完全停止させる手順)
-- [TinkerBoard設定](#TinkerBoard設定)
+- [(未使用)TinkerBoard設定](#TinkerBoard設定)
 - [chromedriverの導入](#chromedriverの導入)
 - [TeraTermリモート設定](#TeraTermリモート設定)
 - [Raspberry PiのステルスSSID対応](#Raspberry-PiのステルスSSID対応)
+- [ウォッチドッグタイマ有効化＆再起動](#ウォッチドッグタイマ有効化＆再起動)
 
 ### 基本操作
 ---
@@ -85,16 +86,17 @@
 ### NTFSなディスクを使用する時
 ---
 - 対象NTFSデバイスの調べ方
-    - dfコマンドで該当するハードを調べる
-    - `sudo blkid [マウント位置]` でUUIDを調べる
-    - `sudo parted -l` でも可
+	- `sudo parted -l` でデバイスを調べる( `/dev/sda` など)
+    - `sudo blkid` でUUIDを調べる(/dev/sdaなどの場合、 `/dev/sda2` に書かれている)
+    
 - 設定
-    - `sudo apt install ntfs-3g` でパッケージを入れる
+    - `sudo apt install ntfs-3g` でパッケージを入れる(ラズパイは初期インストール済)
     - `sudo vim /etc/fstab` を開く
     - 上記の末尾へ下記を挿入
     ```
     UUID="[上記で調べたUUID]"    [マウントしたデバイスのパス]    ntfs-3g    default,nofail    0,0
     ```
+    - 再起動後、`df` コマンドでマウントされているか確認
 
 ### GUIとCUIの切替
 ---
@@ -206,7 +208,7 @@
 ---
 - hub-ctrlコマンド(使う前にlsusbで調べる)
     - インストール
-        - `sudo apt install libusb-dev`
+        - `sudo apt install libusb-dev` (ラズパイは初期インストール済)
         - 任意のディレクトリで下記コマンド実行
         ```
         wget http://www.gniibe.org/oitoite/ac-power-control-by-USB-hub/hub-ctrl.c
@@ -216,13 +218,24 @@
 
 ### HDDを完全停止させる手順
 ---
-- samba停止
-    - `sudo service samba stop`
-- python停止
 - アンマウント
-    - `echo -n "1-1.3" | sudo tee /sys/bus/usb/drivers/usb/unbind` (実行前に`udevadm info --query=path --name=/dev/sda2` で確認)
+    - `echo -n "1-1.2" | sudo tee /sys/bus/usb/drivers/usb/unbind` (実行前に`udevadm info --query=path --name=/dev/sda2` で確認)
 - USB電源供給停止
-    - `sudo hub-ctrl -b 1 -d 2 -P 3 -p 0`
+    - `sudo hub-ctrl -b 1 -d 2 -P 2 -p 0`
+    - 上記の調べ方
+    ```
+    lsusb を実行
+    →Bus 001 Device 006: ID 174c:55aa ASMedia Technology Inc. Name: ASM1051E SATA 6Gb/s bridge(省略) を見つける
+    lsusb -tを実行
+    →|__ Port 3: Dev 6, If 0, Class=Mass Storage, Driver=usb-storage, 480M を見つける
+    
+    hub-ctrlのオプション
+    -b: Bus
+    -d: Device(Dev)
+    -P: Port
+    -p: 0=off, 1=on
+    以上より-b 1 -d 6 -P 3 -p 0(ハードによっては1つ上のルートのハブを指定しないといけない)
+    ```
     - ※一部の機器は電源供給停止不可(ESP8266はダメだった)
 
 ### TinkerBoard設定
@@ -282,3 +295,25 @@
     }
     ```
 - 上記に `scan_ssid=1` を追加
+
+### ウォッチドッグタイマ有効化＆再起動
+---
+- `/boot/config.txt` に `dtparam=watchdog=on` を行追加
+- `sudo mkdir /etc/systemd/system.conf.d/` でフォルダ作成
+- `sudo nano /etc/systemd/system.conf.d/main.conf` でファイル作成し、以下を追加
+  ```
+  [Manager]
+  RuntimeWatchdogSec=5
+  ```
+- `sudo nano /etc/modprobe.d/bcm2835-wdt.conf` でファイル作成し、以下を追加
+  ```
+  options bcm2835_wdt heartbeat=10 nowayout=0
+  ```
+- `sudo reboot` で再起動し以下のコマンド応答があれば設定完了
+  ```
+  pi@raspberrypi:~ $ sudo dmesg | grep bcm2835-wdt
+  [    3.109339] bcm2835-wdt bcm2835-wdt: Broadcom BCM2835 watchdog timer
+  pi@raspberrypi:~ $ sudo dmesg | grep systemd | grep watchdog
+  [    4.523176] systemd[1]: Hardware watchdog 'Broadcom BCM2835 Watchdog timer', version 0
+  [    4.523230] systemd[1]: Set hardware watchdog to 5s.
+  ```
