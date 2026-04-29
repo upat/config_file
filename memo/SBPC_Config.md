@@ -19,8 +19,9 @@
 - [(未使用)TinkerBoard設定](#TinkerBoard設定)
 - [chromedriverの導入](#chromedriverの導入)
 - [TeraTermリモート設定](#TeraTermリモート設定)
-- [Raspberry PiのステルスSSID対応](#Raspberry-PiのステルスSSID対応)
-- [ウォッチドッグタイマ有効化＆再起動](#ウォッチドッグタイマ有効化＆再起動)
+- [(未使用)Raspberry PiのステルスSSID対応](#Raspberry-PiのステルスSSID対応)
+- [(未使用)ウォッチドッグタイマ有効化・再起動](#ウォッチドッグタイマ有効化・再起動)
+- [CUIで日本語設定](#CUIで日本語設定)
 
 ### 基本操作
 ---
@@ -55,22 +56,40 @@
 - アップデート有無確認
     - `python3 -m pip list --o`
 
+- 最新は以下の順でコマンドを実行していく
+    - `python3 -m venv [プロジェクト名(フォルダ名)]`
+    - `source [プロジェクト名(フォルダ名)]/bin/activate`
+    - `python3 -m pip install [欲しいモジュール名]`
+    - `deactivate`
+
 ### samba
 ---
 - インストール
     - `sudo apt install samba`
     - 上記インストール中にWINS設定を使うか尋ねられるが「いいえ」でOK
 - 設定ファイル編集
-    - `sudo vi /etc/samba/smb.conf`
+    - `sudo nano /etc/samba/smb.conf`
 - 設定例
+    - iPhoneのファイルアプリから使用する際は`vfs objects = streams_xattr`を追加し、以下のコマンドでユーザーも追加する。
+    - `sudo smbpasswd -a pi`(この後パスワード設定で2回入力する)
+    - ユーザー登録の確認は`pdbedit -L`、ユーザー削除は`sudo smbpasswd -x pi`
     ```
     [pi]
-        comment = Raspberry Pi
-        path = /home/pi
+        comment = Raspberry Pi Documents
+        path = /home/pi/Documents
         guest ok = yes
         read only = no
         browseable = yes
         force user = pi
+    
+    [pi_hdd]
+        comment = Raspberry Pi HDD
+        path = /mnt/hdd
+        guest ok = yes
+        read only = no
+        browseable = yes
+        force user = pi
+        vfs objects = streams_xattr
     ```
 - 起動
     - `sudo service smbd restart`
@@ -82,6 +101,8 @@
     sudo systemctl enable smbd
     sudo systemctl enable nmbd
     ```
+- nobodyフォルダを非表示にしたい場合
+    - `[global]` 内に `browseable = no` を追加する
 
 ### NTFSなディスクを使用する時
 ---
@@ -296,7 +317,7 @@
     ```
 - 上記に `scan_ssid=1` を追加
 
-### ウォッチドッグタイマ有効化＆再起動
+### ウォッチドッグタイマ有効化・再起動
 ---
 - `/boot/config.txt` に `dtparam=watchdog=on` を行追加
 - `sudo mkdir /etc/systemd/system.conf.d/` でフォルダ作成
@@ -317,3 +338,10 @@
   [    4.523176] systemd[1]: Hardware watchdog 'Broadcom BCM2835 Watchdog timer', version 0
   [    4.523230] systemd[1]: Set hardware watchdog to 5s.
   ```
+
+### CUIで日本語設定
+---
+- `sudo nano /etc/locale.gen` を開き `ja_JP.UTF-8` がコメントアウトされていれば `#` を削除
+- `sudo locale-gen` を実行し、再起動する
+- `sudo raspi-config` を実行し、 `Localisation Options -> Locale -> ja_JP.UTF-8` を選択
+- デフォルトのロケーションを確認されるので `ja_JP.UTF-8` にカーソルを合わせてOKを押す
